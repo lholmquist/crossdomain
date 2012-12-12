@@ -1,7 +1,7 @@
 #!/bin/env node
 //  OpenShift sample Node application
 var express = require('express');
-var app = express();
+var app = express.createServer();
 
 app.all( "/*", function(request,response) {
 

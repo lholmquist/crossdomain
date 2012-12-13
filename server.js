@@ -1,7 +1,10 @@
 #!/bin/env node
 //  OpenShift sample Node application
-var express = require('express');
+var express = require( "express" );
 var app = express();
+var http = require( "http" );
+
+var x = "";
 
 app.all( "/*", function(request,response) {
 
@@ -28,25 +31,59 @@ app.all( "/*", function(request,response) {
                     "access-control-allow-origin": origin,
                     "access-control-allow-methods": "GET, PUT, DELETE, OPTIONS",
                     "access-control-allow-headers": "content-type, accept",
-                    "access-control-max-age": 10, // Seconds.
+                    "access-control-max-age": 20, // Seconds.
                     "content-length": 0
                 }
             );
+            // End the response - we're not sending back any content.
+            return( response.send() );
         }
-        // End the response - we're not sending back any content.
-        response.status( 200 );
-        response.header(
-                    {
-                        "access-control-allow-origin": origin,
-                        "content-type": "application/json"
-                    }
+
+            var responseBody = "";
+            var callback = request.query.callback || request.query.jsonp;
+
+            if( request.params[ 0 ] === "realm/status" ) {
+                http.get( "http://us.battle.net/api/wow/realm/status", function( res ) {
+                    res.on( "data", function( chunk ) {
+                        x += chunk;
+                    });
+
+                    res.on( "end", function() {
+                        responseBody =  x ;
+                        response.status( 200 );
+                        response.header(
+                                {
+                                    "access-control-allow-origin": origin,
+                                    "content-type": "application/json"
+                                }
+                        );
+                        if( callback ) {
+                            response.send( callback + "(" + responseBody + " ) " );
+                        } else {
+                            response.send( JSON.parse( responseBody ) );
+                        }
+                    });
+                }).on( "error", function( error ) {
+                        console.log( "ERROR" + error.message );
+                });
+            } else {
+                responseBody = "{thing: 'crossDomain'}";
+
+                response.status( 200 );
+                response.header(
+                        {
+                            "access-control-allow-origin": origin,
+                            "content-type": "application/json"
+                        }
                 );
-        var callback = request.query.callback || request.query.jsonp;
-        if( callback ) {
-            response.send( callback + "({response:'stuff'})");
-        } else {
-            response.send( {response:'stuff'});
+
+                if( callback ) {
+                    response.send( callback + "(" + responseBody + " ) " );
+                } else {
+                    response.send( responseBody );
+                }
         }
+
 
 
 });

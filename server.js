@@ -41,11 +41,10 @@ app.all( "/*", function(request,response) {
             var x = "";
             var callback = request.query.callback || request.query.jsonp;
 
-            if( request.params[ 0 ] === "realm/status" ) {
-
+            if( request.params[ 0 ].indexOf( "api/wow/" ) != -1 ) {
                 var options = {
                     host: "us.battle.net",
-                    path: "/api/wow/realm/status",
+                    path: "/" + request.params[ 0 ],
                     method: "GET"
                 };
 

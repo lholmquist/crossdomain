@@ -4,8 +4,6 @@ var express = require( "express" );
 var app = express();
 var http = require( "http" );
 
-var x = "";
-
 app.all( "/*", function(request,response) {
 
     // When dealing with CORS (Cross-Origin Resource Sharing)
@@ -40,10 +38,18 @@ app.all( "/*", function(request,response) {
         }
 
             var responseBody = "";
+            var x = "";
             var callback = request.query.callback || request.query.jsonp;
 
             if( request.params[ 0 ] === "realm/status" ) {
-                http.get( "http://us.battle.net/api/wow/realm/status", function( res ) {
+
+                var options = {
+                    host: "us.battle.net",
+                    path: "/api/wow/realm/status",
+                    method: "GET"
+                };
+
+                var req = http.request( options, function( res ) {
                     res.on( "data", function( chunk ) {
                         x += chunk;
                     });
@@ -57,6 +63,7 @@ app.all( "/*", function(request,response) {
                                     "content-type": "application/json"
                                 }
                         );
+
                         if( callback ) {
                             response.send( callback + "(" + responseBody + " ) " );
                         } else {
@@ -66,6 +73,8 @@ app.all( "/*", function(request,response) {
                 }).on( "error", function( error ) {
                         console.log( "ERROR" + error.message );
                 });
+
+                req.end();
             } else {
                 responseBody = "{thing: 'crossDomain'}";
 
